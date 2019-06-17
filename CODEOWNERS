@@ -1,0 +1,5 @@
+# This file controls who is tagged for review for any given pull request.
+# Read more here: https://confluence.rbx.com/display/BIRD/Using+CODEOWNERS+files
+# To start with, pull requests will need to be approved by at
+# least one person from the repo-wso2-apim-jwt-configurable-claims-generator group.
+* @roblox/repo-wso2-apim-jwt-configurable-claims-generator
