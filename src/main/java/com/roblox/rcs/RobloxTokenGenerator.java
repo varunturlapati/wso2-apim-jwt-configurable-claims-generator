@@ -11,6 +11,8 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.wso2.carbon.apimgt.api.APIManagementException;
 import org.wso2.carbon.apimgt.impl.APIConstants;
@@ -22,23 +24,27 @@ import org.wso2.carbon.apimgt.keymgt.token.JWTGenerator;
 public class RobloxTokenGenerator extends JWTGenerator {
 	
     private final long TIME_OFFSET_MS = 300000;	//For 300 seconds
+    private static final Log log = LogFactory.getLog(RobloxTokenGenerator.class);
     
     @Override
     public Map<String, String> populateStandardClaims(TokenValidationContext validationContext) throws APIManagementException {
         Map<String, String> standardClaims = super.populateStandardClaims(validationContext);
         System.out.println("ROBLOX CUSTOM TOKEN GENERATOR - beginning of overriding standard claims");
+        log.info("Overriding standard claims. Adding fields 'nbf' and 'iat'");
         long currTime = System.currentTimeMillis();
         String s_iat = String.valueOf(currTime);
         String s_nbf = String.valueOf(currTime - TIME_OFFSET_MS);	//Pegging it to 300 sec before iat for possible sync issues
         standardClaims.put("nbf", s_nbf);
         standardClaims.put("iat", s_iat);
         System.out.println("ROBLOX CUSTOM TOKEN GENERATOR - end of overriding standard claims");
+        log.info("Done adding 'nbf' and 'iat' to the standard claims");
         return standardClaims;
     }
     
     @Override
     public String buildBody(TokenValidationContext validationContext) throws APIManagementException {
     System.out.println("ROBLOX CUSTOM TOKEN GENERATOR - beginning of overriding buildBody() of AbstractJWTGenerator");
+    log.info("Overriding buildBody() of AbstractJWTGenerator here - Handling the conversion of 'nbf' and 'iat' to long format.");
     String userAttributeSeparator = APIConstants.MULTI_ATTRIBUTE_SEPARATOR_DEFAULT;
     
         Map<String, String> standardClaims = populateStandardClaims(validationContext);
@@ -73,7 +79,7 @@ public class RobloxTokenGenerator extends JWTGenerator {
                         } catch (IOException e) {
                             // Exception isn't thrown in order to generate jwt without claim, even if an error is
                             // occurred during the retrieving claims.
-                            System.out.printf("Error while reading claim values %s\n", e);
+                            log.error("Error while reading claim values %s\n", e);
                         }
                     } else if (userAttributeSeparator != null && claimVal != null &&
                             claimVal.contains(userAttributeSeparator)) {
@@ -97,6 +103,7 @@ public class RobloxTokenGenerator extends JWTGenerator {
                 }
             }
             System.out.println("ROBLOX CUSTOM TOKEN GENERATOR - end of overriding buildBody() of AbstractJWTGenerator");
+            log.info("Done overriding buildBody() of AbstractJWTGenerator");
             
             return jwtClaimsSetBuilder.build().toJSONObject().toJSONString();
         }
